@@ -14,3 +14,4 @@
 .phpunit.result.cache
 ###< phpunit/phpunit ###
 .idea
+bin/mercure/mercure.db
