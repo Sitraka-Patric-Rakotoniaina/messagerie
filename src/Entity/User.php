@@ -8,6 +8,8 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Validator\Constraints\PasswordStrength;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
@@ -18,6 +20,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?int $id = null;
 
     #[ORM\Column(length: 180, unique: true)]
+    #[Assert\NotBlank(message: 'The email cannot be blank')]
+    #[Assert\Email(message: 'The email address {{ value }} is invalid')]
     private ?string $email = null;
 
     #[ORM\Column]
@@ -27,15 +31,35 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      * @var string The hashed password
      */
     #[ORM\Column]
+    #[Assert\NotBlank(message: 'The password cannot be blank')]
+    #[Assert\PasswordStrength(minScore: PasswordStrength::STRENGTH_WEAK, message: 'The password is too weak')]
     private ?string $password = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: "The firstName cannot be blank")]
+    #[Assert\Regex(
+        pattern: '/\d/',
+        message: 'The firstName must be letters only',
+        match: false
+    )]
     private ?string $firstName = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Assert\NotBlank(message: "The lastName cannot be blank")]
+    #[Assert\Regex(
+        pattern: '/\d/',
+        message: 'The lastName must be letters only',
+        match: false
+    )]
     private ?string $lastName = null;
 
     #[ORM\Column(length: 100)]
+    #[Assert\NotBlank(message: 'The pseudo cannot be blank')]
+    #[Assert\Length(min: 2, max: 30, minMessage: "The pseudo must be at least 2 characters")]
+    #[Assert\Regex(
+        pattern: '/^(?![0-9]+$)(?![\W_]+$)/',
+        message: 'The pseudo is invalid'
+    )]
     private ?string $pseudo = null;
 
     #[ORM\ManyToMany(targetEntity: ChatRoom::class, mappedBy: 'users')]
