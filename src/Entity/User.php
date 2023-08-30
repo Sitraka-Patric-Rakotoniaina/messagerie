@@ -2,37 +2,41 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Metadata\ApiResource;
 use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Validator\Constraints\PasswordStrength;
 
+#[ApiResource(normalizationContext: ['groups' => 'user:read'], denormalizationContext: ['groups' => 'user:write'])]
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['user:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 180, unique: true)]
     #[Assert\NotBlank(message: 'The email cannot be blank')]
     #[Assert\Email(message: 'The email address {{ value }} is invalid')]
+    #[Groups(['user:read', 'user:write'])]
     private ?string $email = null;
 
     #[ORM\Column]
+    #[Groups(['user:read', 'user:write'])]
     private array $roles = [];
 
-    /**
-     * @var string The hashed password
-     */
     #[ORM\Column]
     #[Assert\NotBlank(message: 'The password cannot be blank')]
     #[Assert\PasswordStrength(minScore: PasswordStrength::STRENGTH_WEAK, message: 'The password is too weak')]
+    #[Groups(['user:read', 'user:write'])]
     private ?string $password = null;
 
     #[ORM\Column(length: 255)]
@@ -42,6 +46,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         message: 'The firstName must be letters only',
         match: false
     )]
+    #[Groups(['user:read', 'user:write'])]
     private ?string $firstName = null;
 
     #[ORM\Column(length: 255, nullable: true)]
@@ -51,6 +56,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         message: 'The lastName must be letters only',
         match: false
     )]
+    #[Groups(['user:read', 'user:write'])]
     private ?string $lastName = null;
 
     #[ORM\Column(length: 100)]
@@ -60,9 +66,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         pattern: '/^(?![0-9]+$)(?![\W_]+$)/',
         message: 'The pseudo is invalid'
     )]
+    #[Groups(['user:read', 'user:write'])]
     private ?string $pseudo = null;
 
     #[ORM\ManyToMany(targetEntity: ChatRoom::class, mappedBy: 'users')]
+    #[Groups(['user:read', 'user:write'])]
     private Collection $chatRooms;
 
     public function __construct()

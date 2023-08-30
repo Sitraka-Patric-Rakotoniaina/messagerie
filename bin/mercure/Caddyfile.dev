@@ -3,7 +3,7 @@
 	{$GLOBAL_OPTIONS}
 }
 
-{$SERVER_NAME:localhost}
+{$SERVER_NAME:localhost:3000}
 
 log {
 	format filter {
