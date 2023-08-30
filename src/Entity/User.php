@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\UserRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -35,6 +37,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column(length: 100)]
     private ?string $pseudo = null;
+
+    #[ORM\ManyToMany(targetEntity: ChatRoom::class, mappedBy: 'users')]
+    private Collection $chatRooms;
+
+    public function __construct()
+    {
+        $this->chatRooms = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -138,6 +148,33 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setPseudo(string $pseudo): static
     {
         $this->pseudo = $pseudo;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, ChatRoom>
+     */
+    public function getChatRooms(): Collection
+    {
+        return $this->chatRooms;
+    }
+
+    public function addChatRoom(ChatRoom $chatRoom): static
+    {
+        if (!$this->chatRooms->contains($chatRoom)) {
+            $this->chatRooms->add($chatRoom);
+            $chatRoom->addUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeChatRoom(ChatRoom $chatRoom): static
+    {
+        if ($this->chatRooms->removeElement($chatRoom)) {
+            $chatRoom->removeUser($this);
+        }
 
         return $this;
     }
