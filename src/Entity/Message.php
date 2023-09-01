@@ -3,7 +3,9 @@
 namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Post;
 use App\Repository\MessageRepository;
+use App\State\MessageProcessor;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
@@ -12,6 +14,7 @@ use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ApiResource(normalizationContext: ['groups' => ['message:read']], denormalizationContext: ['groups' => ['message:write']])]
+#[Post(processor: MessageProcessor::class)]
 #[ORM\Entity(repositoryClass: MessageRepository::class)]
 class Message
 {
@@ -25,14 +28,15 @@ class Message
     #[Groups(['message:read', 'message:write'])]
     private ?User $user = null;
 
-    #[ORM\ManyToMany(targetEntity: ChatRoom::class, inversedBy: 'messages')]
-    #[Groups(['message:read', 'message:write'])]
-    private Collection $chatRooms;
-
     #[ORM\Column(type: Types::TEXT)]
     #[Assert\NotBlank(message: "Content cannot be blank")]
     #[Groups(['message:read', 'message:write'])]
     private ?string $content = null;
+
+    #[ORM\ManyToOne(inversedBy: 'messages')]
+    #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['message:read', 'message:write'])]
+    private ?ChatRoom $chatRoom = null;
 
     public function __construct()
     {
@@ -56,30 +60,6 @@ class Message
         return $this;
     }
 
-    /**
-     * @return Collection<int, ChatRoom>
-     */
-    public function getChatRooms(): Collection
-    {
-        return $this->chatRooms;
-    }
-
-    public function addChatRoom(ChatRoom $chatRoom): static
-    {
-        if (!$this->chatRooms->contains($chatRoom)) {
-            $this->chatRooms->add($chatRoom);
-        }
-
-        return $this;
-    }
-
-    public function removeChatRoom(ChatRoom $chatRoom): static
-    {
-        $this->chatRooms->removeElement($chatRoom);
-
-        return $this;
-    }
-
     public function getContent(): ?string
     {
         return $this->content;
@@ -88,6 +68,18 @@ class Message
     public function setContent(string $content): static
     {
         $this->content = $content;
+
+        return $this;
+    }
+
+    public function getChatRoom(): ?ChatRoom
+    {
+        return $this->chatRoom;
+    }
+
+    public function setChatRoom(?ChatRoom $chatRoom): static
+    {
+        $this->chatRoom = $chatRoom;
 
         return $this;
     }

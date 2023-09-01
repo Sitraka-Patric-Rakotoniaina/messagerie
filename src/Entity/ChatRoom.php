@@ -2,29 +2,36 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Metadata\ApiResource;
 use App\Repository\ChatRoomRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 
+#[ApiResource(normalizationContext: ['groups' => ['room:read']], denormalizationContext: ['groups' => ['room:write']])]
 #[ORM\Entity(repositoryClass: ChatRoomRepository::class)]
 class ChatRoom
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['room:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 50, nullable: true)]
     #[Assert\NotBlank(message: "Name cannot be blank")]
     #[Assert\Length(min: 3, max: 50, minMessage: "Name must be at least 3 characters", maxMessage: "Name must be at most 20 characters")]
+    #[Groups(['room:read', 'room:write'])]
     private ?string $name = null;
 
     #[ORM\ManyToMany(targetEntity: User::class, inversedBy: 'chatRooms')]
+    #[Groups(['room:read', 'room:write'])]
     private Collection $users;
 
-    #[ORM\ManyToMany(targetEntity: Message::class, mappedBy: 'chatRooms')]
+    #[ORM\OneToMany(mappedBy: 'chatRoom', targetEntity: Message::class, orphanRemoval: true)]
+    #[Groups(['room:read', 'room:write'])]
     private Collection $messages;
 
     public function __construct()
@@ -86,7 +93,7 @@ class ChatRoom
     {
         if (!$this->messages->contains($message)) {
             $this->messages->add($message);
-            $message->addChatRoom($this);
+            $message->setChatRoom($this);
         }
 
         return $this;
@@ -95,7 +102,10 @@ class ChatRoom
     public function removeMessage(Message $message): static
     {
         if ($this->messages->removeElement($message)) {
-            $message->removeChatRoom($this);
+            // set the owning side to null (unless already changed)
+            if ($message->getChatRoom() === $this) {
+                $message->setChatRoom(null);
+            }
         }
 
         return $this;

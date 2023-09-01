@@ -2,6 +2,7 @@
 
 namespace App\DataFixtures;
 
+use App\Entity\ChatRoom;
 use App\Entity\User;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
@@ -17,7 +18,11 @@ class AppFixtures extends Fixture
     public function load(ObjectManager $manager): void
     {
         $faker = Factory::create('fr_FR');
-        for ($i = 0; $i < 20; $i++) {
+        for ($i = 0; $i < 10; $i++) {
+            $room = new ChatRoom();
+            $room->setName($faker->domainName());
+            $manager->persist($room);
+
             $user = new User();
             $user->setEmail($faker->email())
                 ->setFirstName($faker->firstName())
